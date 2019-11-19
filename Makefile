@@ -2,11 +2,11 @@
 # sudo apt-get install g++ binutils libc6-dev-i386
 # sudo apt-get install VirtualBox grub-legacy xorriso
 
-GCCPARAMS = -m32 -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -I./include  -nostdlib 
+GCCPARAMS = -m32 -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -I./include  -nostdlib  -fpie
 ASPARAMS = --32 
 LDPARAMS = -melf_i386 
 
-objects =main.o start.o 
+objects = start.o scrn.o main.o
 
 
 
