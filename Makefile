@@ -1,45 +1,36 @@
+#Need to use gross compiler
 
-# sudo apt-get install g++ binutils libc6-dev-i386
-# sudo apt-get install VirtualBox grub-legacy xorriso
-
-GCCPARAMS = -m32 -Wall -O -fstrength-reduce -fomit-frame-pointer -finline-functions -nostdinc -fno-builtin -I./include  -nostdlib  -fpie
+GCCPARAMS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 ASPARAMS = --32 
-LDPARAMS = -melf_i386 
+LDPARAMS =  -ffreestanding -O2 -nostdlib -lgcc
 
-objects = start.o scrn.o main.o
+objects = boot.o kernel.o
 
 
 
 %.o: %.c
-	gcc $(GCCPARAMS) -c -o $@ $<
+	i686-elf-gcc  $(GCCPARAMS) -o $@ -c $<
 
 %.o: %.s
-	as $(ASPARAMS) -o $@ $<
+	i686-elf-as -o $@ $<
+
 	
 %.o: %.asm
 	nasm -f elf32  -o $@ $<
 
 
-basickernel.bin: link.ld $(objects)
-	ld $(LDPARAMS) -T $< -o $@ $(objects)
+basickernel.bin: linker.ld $(objects)
+	i686-elf-gcc $(LDPARAMS) -T $< -o $@ $(objects)
 	
-kernel.bin: link.ld $(objects)
-	ld $(LDPARAMS) -T $< -o $@ $(objects)
+kernel.bin: linker.ld $(objects)
+	i686-elf-gcc $(LDPARAMS) -T $< -o $@ $(objects)
 
-basickernel.iso: mykernel.bin
-	mkdir iso
-	mkdir iso/boot
-	mkdir iso/boot/grub
-	cp mykernel.bin iso/boot/mykernel.bin
-	echo 'set timeout=0'                      > iso/boot/grub/grub.cfg
-	echo 'set default=0'                     >> iso/boot/grub/grub.cfg
-	echo ''                                  >> iso/boot/grub/grub.cfg
-	echo 'menuentry "My Operating System" {' >> iso/boot/grub/grub.cfg
-	echo '  multiboot /boot/mykernel.bin'    >> iso/boot/grub/grub.cfg
-	echo '  boot'                            >> iso/boot/grub/grub.cfg
-	echo '}'                                 >> iso/boot/grub/grub.cfg
-	grub-mkrescue --output=mykernel.iso iso
-	rm -rf iso
+kernel.iso: kernel.bin
+	mkdir -p isodir/boot/grub
+	cp kernel.bin isodir/boot/kernel.bin
+	cp grub.cfg isodir/boot/grub/grub.cfg
+	grub-mkrescue /usr/lib/grub/i386-pc -o myos.iso isodir
+	#apt-get install grub-pc
 
 run: mykernel.iso
 	(killall VirtualBox && sleep 1) || true
